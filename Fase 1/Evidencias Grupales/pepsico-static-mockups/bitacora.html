@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bitácora de portería – MVP PepsiCo</title>
+<!-- Mantengo tus assets originales para NO romper el dashboard -->
+<link rel="stylesheet" href="assets/styles.css">
+<script defer src="assets/app.js"></script>
+<style>
+body{background:#eaf1fb;} /* Fondo azul claro */
+.section{background:#f9fbff;padding:16px;border-radius:12px;} /* Panel con toque azulado */
+/* Estilos encapsulados (prefijo .bp- para no tocar tu dashboard) */
+.bp-card{border:1px solid #e5e7eb;border-radius:12px;padding:14px;background:#fff}
+.bp-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.bp-grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.bp-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#dbeafe;font-weight:600;font-size:.9rem;color:#1e3a8a}
+.bp-input, .bp-select{width:100%;border:1px solid #93c5fd;border-radius:10px;padding:10px 12px;font:inherit;background:#fff;outline:none}
+.bp-input:focus,.bp-select:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.2)}
+.bp-btn{appearance:none;border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+.bp-btn.primary{background:#004b93;color:#fff}
+.bp-btn.secondary{background:#e0f2fe;color:#111827}
+.bp-btn.ghost{background:transparent;color:#004b93}
+.bp-btn.danger{background:#fee2e2;color:#7f1d1d}
+.bp-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.bp-stat{display:flex;gap:8px;align-items:center;background:#f0f9ff;padding:8px 10px;border-radius:12px}
+.bp-badge{padding:4px 8px;border-radius:999px;font-weight:700;font-size:.8rem}
+.bp-badge.in{background:#d1fae5;color:#065f46}
+.bp-badge.out{background:#fee2e2;color:#8a3d06}
+table.bp-table{width:100%;border-collapse:separate;border-spacing:0}
+.bp-table thead th{position:sticky;top:0;background:#e0f2fe;text-align:left;font-size:.9rem;color:#1e3a8a;padding:10px 12px;border-bottom:1px solid #93c5fd}
+.bp-table tbody td{padding:12px;border-bottom:1px solid #f1f5f9}
+.bp-table tbody tr:hover{background:#f0f9ff}
+.bp-row-actions{display:flex;gap:8px}
+.muted{color:#6b7280}
+.small{font-size:.86rem}
+@media (max-width:960px){.bp-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.bp-grid,.bp-grid-2{grid-template-columns:1fr}}
+:root{--red:#DF002C; --blue-dark:#28458E; --blue-elec:#0096D6; --orange:#EB7B30; --green:#00984A; --muted:#64748b; --line:#e5e7eb}
+/* Fondo general ligeramente azulado */
+body{ background:#eef3fb; }
+/* Banner degradado tipo “hero” solo con CSS (sin tocar HTML) */
+.section{ position:relative; background:transparent; padding-top:18px; }
+.section::before{
+content:"";
+position:absolute; inset:0 auto auto 0; right:0; height:120px;
+background:
+radial-gradient(700px 300px at 15% 15%, rgba(0,150,214,.25), transparent 60%),
+radial-gradient(600px 260px at 85% 20%, rgba(223,0,44,.25), transparent 55%),
+linear-gradient(120deg, var(--blue-dark), #1b3487 55%, #142a6c);
+border-radius:18px;
+box-shadow:0 8px 24px rgba(2,6,23,.10);
+z-index:0;
+}
+/* Asegura que el primer bloque (título + toolbar) se vea sobre el hero */
+.section > :first-child{ position:relative; z-index:1; }
+.section h2{ color:#fff !important; }
+/* Chips (bp-pill) con estilo de hero */
+.bp-pill{
+background:rgba(255,255,255,.14);
+color:#fff;
+border:1px solid rgba(255,255,255,.35);
+backdrop-filter:blur(2px);
+}
+/* Stats y filtros con tono azul suave */
+.bp-stat{ background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25); color:#eaf2ff; }
+.bp-stat label{ color:#eaf2ff; }
+.bp-input, .bp-select{ border-color:#cfe0ff; }
+.bp-input:focus, .bp-select:focus{ border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.25); }
+/* Botones acorde a la paleta OT */
+.bp-btn.primary{ background:#28458E; color:#fff; }
+.bp-btn.secondary{ background:rgba(255,255,255,.14); color:#fff; border:1px solid rgba(255,255,255,.35); }
+.bp-btn.ghost{ color:#eaf2ff; }
+.bp-btn.danger{ background:#fee2e2; color:#7f1d1d; }
+/* Tabla con encabezado en azul */
+.bp-table thead th{ background:#e8efff; color:#1e3a8a; border-bottom:1px solid #cfe0ff; }
+.bp-table tbody tr:hover{ background:#f3f6ff; }
+/* Badges entrada / salida acorde a esquema */
+.bp-badge.in{ background:#eaf7ef; border:1px solid #c7edd6; color:#0f5132; }
+.bp-badge.out{ background:#fff7ed; border:1px solid #ffddb4; color:#9a3412; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <!-- Topbar y layout idénticos a tu estructura original -->
+    <header class="topbar">
+      <div class="brand"><span class="mark"></span><span class="word">PEPSICO · Taller</span></div>
+      <div class="user">
+        <button class="btn secondary" onclick="go('index.html')">Salir</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <ul class="nav">
+          <li><a id="link-dashboard" href="dashboard.html">🏠 Tablero</a></li>
+          <li><a id="link-bitacora" href="bitacora.html">🚘 Bitácora portería</a></li>
+          <li><a id="link-ot" href="ot.html">🧰 OT & Tareas</a></li>
+          <li><a id="link-reportes" href="reportes.html">📊 Reportes</a></li>
+          <li><a id="link-usuarios" href="usuarios.html">👥 Usuarios</a></li>
+        </ul>
+      </aside>
+
+      <main>
+        <section class="section">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <h2 style="margin:2px 0 10px">Bitácora de portería</h2>
+            <span class="bp-pill"><span>🕒</span><span id="clock">--:--</span></span>
+            <div style="margin-left:auto"></div>
+            <div class="bp-toolbar">
+              <button class="bp-btn secondary" id="exportCsv">⬇️ Exportar CSV</button>
+              <button class="bp-btn ghost" id="printBtn">🖨️ Imprimir</button>
+              <button class="bp-btn danger" id="clearAll">🗑️ Limpiar todo</button>
+            </div>
+          </div>
+
+          <div class="bp-card" style="margin:12px 0">
+            <h4 style="margin:0 0 12px">Registrar movimiento</h4>
+            <div class="bp-grid">
+              <div>
+                <label>Patente</label>
+                <input id="patente" class="bp-input" placeholder="ABCD12" maxlength="7" autocomplete="off" />
+                <div class="small muted" style="margin-top:6px">Se normaliza a MAYÚSCULAS · Formatos típicos: ABCD12 / ABC12D</div>
+              </div>
+              <div>
+                <label>Fecha</label>
+                <input id="fecha" class="bp-input" type="date" />
+              </div>
+              <div>
+                <label>Hora</label>
+                <input id="hora" class="bp-input" type="time" />
+              </div>
+              <div>
+                <label>Usuario / Guardia</label>
+                <input id="usuario" class="bp-input" placeholder="Juan" />
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap">
+              <button class="bp-btn primary" id="btnEntrada">Registrar entrada</button>
+              <button class="bp-btn secondary" id="btnSalida">Registrar salida</button>
+              <span class="muted small">o presiona <b>E</b> / <b>S</b></span>
+              <div style="margin-left:auto"></div>
+              <label class="small" for="obs">Observación (opcional)</label>
+              <input id="obs" class="bp-input" placeholder="Motivo, comentario, etc." style="max-width:420px" />
+            </div>
+          </div>
+
+          <div class="bp-toolbar" style="margin:10px 0 0">
+            <div class="bp-stat"><span>🔎</span>
+              <input id="q" class="bp-input" placeholder="Buscar por patente / usuario / obs" style="min-width:280px" />
+            </div>
+            <div class="bp-stat">
+              <label for="filtroMov" class="small">Movimiento</label>
+              <select id="filtroMov" class="bp-select">
+                <option value="">Todos</option>
+                <option value="Entrada">Entrada</option>
+                <option value="Salida">Salida</option>
+              </select>
+            </div>
+            <div class="bp-stat">
+              <label for="desde" class="small">Desde</label>
+              <input type="date" id="desde" class="bp-input" />
+              <label for="hasta" class="small" style="margin-left:8px">Hasta</label>
+              <input type="date" id="hasta" class="bp-input" />
+            </div>
+            <div style="margin-left:auto"></div>
+            <div class="bp-pill">Entradas: <b id="countIn">0</b></div>
+            <div class="bp-pill">Salidas: <b id="countOut">0</b></div>
+            <div class="bp-pill">Total: <b id="countTotal">0</b></div>
+          </div>
+
+          <div class="bp-card" style="margin-top:12px;overflow:auto">
+            <table id="tabla" class="bp-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Patente</th>
+                  <th>Movimiento</th>
+                  <th>Fecha</th>
+                  <th>Hora</th>
+                  <th>Usuario</th>
+                  <th>Observación</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // No sobreescribo tu go() si ya existe; si no existe, creo una mínima
+    if(typeof go !== 'function'){
+      function go(href){ window.location.href = href; }
+    }
+
+    // Marca activa en el sidebar según el archivo actual
+    (function(){
+      const path = (location.pathname.split('/').pop()||'dashboard.html').toLowerCase();
+      document.querySelectorAll('.nav a').forEach(a=>{
+        if(a.getAttribute('href').toLowerCase()===path){ a.classList.add('active'); }
+      });
+    })();
+
+    // Estado en localStorage aislado para esta pantalla
+    const KEY = 'bitacoraEntries@pepsico';
+    let entries = JSON.parse(localStorage.getItem(KEY) || '[]');
+
+    // DOM refs
+    const patente = document.getElementById('patente');
+    const fecha = document.getElementById('fecha');
+    const hora = document.getElementById('hora');
+    const usuario = document.getElementById('usuario');
+    const obs = document.getElementById('obs');
+    const tbody = document.getElementById('tbody');
+    const q = document.getElementById('q');
+    const filtroMov = document.getElementById('filtroMov');
+    const desde = document.getElementById('desde');
+    const hasta = document.getElementById('hasta');
+    const countIn = document.getElementById('countIn');
+    const countOut = document.getElementById('countOut');
+    const countTotal = document.getElementById('countTotal');
+
+    // Reloj
+    const clock = document.getElementById('clock');
+    setInterval(()=>{ const d=new Date(); clock.textContent=d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}); }, 1000);
+
+    // Defaults fecha/hora
+    function setNow(){
+      const now = new Date();
+      fecha.value = now.toISOString().slice(0,10);
+      hora.value = now.toLocaleTimeString('es-CL',{hour12:false,hour:'2-digit',minute:'2-digit'});
+    }
+    setNow();
+
+    // Validación
+    function normalizePlate(v){ return (v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,7); }
+    patente.addEventListener('input',()=>{ patente.value = normalizePlate(patente.value); });
+    function validate(){
+      const p = normalizePlate(patente.value);
+      if(p.length < 5){ alert('Patente inválida (5 a 7 caracteres).'); return false; }
+      if(!usuario.value.trim()){ usuario.value = 'Guardia'; }
+      if(!fecha.value){ alert('Selecciona una fecha.'); return false; }
+      if(!hora.value){ alert('Ingresa hora.'); return false; }
+      return true;
+    }
+
+    function save(){ localStorage.setItem(KEY, JSON.stringify(entries)); }
+
+    function add(mov){
+      if(!validate()) return;
+      const item = {
+        id: crypto.randomUUID(),
+        patente: normalizePlate(patente.value),
+        movimiento: mov,
+        fecha: fecha.value,
+        hora: hora.value,
+        usuario: usuario.value.trim() || 'Guardia',
+        obs: obs.value.trim()
+      };
+      entries.unshift(item); save(); render();
+      patente.value=''; obs.value=''; setNow(); patente.focus();
+    }
+
+    function remove(id){ if(confirm('¿Eliminar registro?')){ entries = entries.filter(x=>x.id!==id); save(); render(); } }
+    function edit(id){
+      const it = entries.find(x=>x.id===id); if(!it) return;
+      const nuevoUsuario = prompt('Editar usuario', it.usuario) ?? it.usuario;
+      const nuevaObs = prompt('Editar observación', it.obs ?? '') ?? it.obs;
+      it.usuario = (nuevoUsuario||'').trim() || it.usuario;
+      it.obs = (nuevaObs||'').trim(); save(); render();
+    }
+
+    function matchesFilters(it){
+      const term = (q.value||'').toLowerCase();
+      const inText = `${it.patente} ${it.usuario} ${it.obs}`.toLowerCase().includes(term);
+      const movOk = !filtroMov.value || it.movimiento === filtroMov.value;
+      const d = it.fecha;
+      const fromOk = !desde.value || d >= desde.value;
+      const toOk = !hasta.value || d <= hasta.value;
+      return inText && movOk && fromOk && toOk;
+    }
+
+    function render(){
+      const filtered = entries.filter(matchesFilters);
+      countTotal.textContent = filtered.length;
+      countIn.textContent = filtered.filter(x=>x.movimiento==='Entrada').length;
+      countOut.textContent = filtered.filter(x=>x.movimiento==='Salida').length;
+      tbody.innerHTML = filtered.map((it, idx)=>`
+        <tr>
+          <td class="small muted">${idx+1}</td>
+          <td><b>${it.patente}</b></td>
+          <td>${it.movimiento==='Entrada'?'<span class="bp-badge in">Entrada</span>':'<span class="bp-badge out">Salida</span>'}</td>
+          <td>${it.fecha}</td>
+          <td>${it.hora}</td>
+          <td>${it.usuario}</td>
+          <td>${it.obs||'<span class="muted">—</span>'}</td>
+          <td class="bp-row-actions">
+            <button class="bp-btn ghost" onclick="edit('${it.id}')">✏️ Editar</button>
+            <button class="bp-btn danger" onclick="remove('${it.id}')">Eliminar</button>
+          </td>
+        </tr>`).join('');
+    }
+
+    function exportCSV(){
+      const rows = [
+        ['Patente','Movimiento','Fecha','Hora','Usuario','Observación'],
+        ...entries.map(x=>[x.patente,x.movimiento,x.fecha,x.hora,x.usuario,(x.obs||'')])
+      ];
+      const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download=`bitacora_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }
+
+    function printTable(){
+      const w = window.open('', 'PRINT', 'height=600,width=900');
+      w.document.write(`<html><head><title>Bitácora</title></head><body>`);
+      w.document.write('<h3>Bitácora de portería</h3>');
+      w.document.write(document.getElementById('tabla').outerHTML);
+      w.document.write('</body></html>');
+      w.document.close(); w.focus(); w.print(); w.close();
+    }
+
+    document.getElementById('btnEntrada').addEventListener('click',()=>add('Entrada'));
+    document.getElementById('btnSalida').addEventListener('click',()=>add('Salida'));
+    document.getElementById('exportCsv').addEventListener('click', exportCSV);
+    document.getElementById('printBtn').addEventListener('click', printTable);
+    document.getElementById('clearAll').addEventListener('click', ()=>{ if(confirm('¿Borrar TODOS los registros?')){ entries=[]; save(); render(); }});
+
+    q.addEventListener('input', render);
+    filtroMov.addEventListener('change', render);
+    desde.addEventListener('change', render);
+    hasta.addEventListener('change', render);
+
+    // Atajos
+    document.addEventListener('keydown',(e)=>{
+      if(e.target && ['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+      if(e.key.toLowerCase()==='e') add('Entrada');
+      if(e.key.toLowerCase()==='s') add('Salida');
+    });
+
+    // Semilla demo si está vacío
+    if(entries.length===0){
+      const hoy = new Date().toISOString().slice(0,10);
+      entries=[
+        {id:crypto.randomUUID(),patente:'ABCD12',movimiento:'Entrada',fecha:hoy,hora:'08:10',usuario:'Juan',obs:''},
+        {id:crypto.randomUUID(),patente:'JKLM34',movimiento:'Salida', fecha:hoy,hora:'09:05',usuario:'Ana', obs:'Visita proveedor'},
+        {id:crypto.randomUUID(),patente:'MNO789',movimiento:'Entrada',fecha:hoy,hora:'10:15',usuario:'Juan',obs:''}
+      ];
+      save();
+    }
+
+    render();
+  </script>
+</body>
+</html>

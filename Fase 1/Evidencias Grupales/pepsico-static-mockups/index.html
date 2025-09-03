@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Login – MVP PepsiCo</title>
+  <style>
+    :root{
+      --red:#DF002C;
+      --blue-dark:#28458E;
+      --blue-elec:#0096D6;
+      --orange:#EB7B30;
+      --green:#00984A;
+      --muted:#64748b;
+      --shadow:0 12px 30px rgba(2,6,23,.18);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:system-ui,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% 10%, rgba(0,150,214,.20), transparent 60%),
+        radial-gradient(900px 500px at 85% 15%, rgba(223,0,44,.18), transparent 55%),
+        radial-gradient(800px 500px at 15% 85%, rgba(235,123,48,.20), transparent 55%),
+        radial-gradient(900px 600px at 85% 85%, rgba(0,152,74,.18), transparent 55%),
+        linear-gradient(135deg, var(--blue-dark) 0%, #192d7a 35%, #0f225e 70%, #0b1b4a 100%);
+    }
+    .login-wrap{min-height:100vh;display:grid;place-items:center;padding:32px}
+    .card{
+      width:min(420px,100%);
+      background:#fff;
+      border-radius:20px;
+      box-shadow:var(--shadow);
+      padding:28px;
+    }
+    .logo{text-align:center;margin-bottom:20px}
+    .logo img{max-width:240px;height:auto}
+    label{display:block;font-size:13px;color:var(--muted);margin:10px 0 6px}
+    .input{width:100%;padding:12px 14px;border:1px solid #ddd;border-radius:12px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer}
+    .btn.primary{background:var(--blue-dark);color:#fff}
+    .btn.link{background:transparent;color:var(--blue-elec)}
+    .version{margin-top:14px;text-align:center;color:var(--muted);font-size:12px}
+  </style>
+  <script>
+    function go(href){ window.location.href = href; }
+  </script>
+</head>
+<body>
+  <section class="login-wrap">
+    <form class="card" onsubmit="event.preventDefault(); go('dashboard.html')">
+      <div class="logo">
+        <!-- Aquí usamos el logo oficial -->
+        <img src="assets/PepsiCologo.svg.png" alt="PepsiCo Logo">
+      </div>
+
+      <label for="u">Usuario</label>
+      <input id="u" class="input" type="text" placeholder="nombre@pepsico.com" required>
+
+      <label for="p">Contraseña</label>
+      <input id="p" class="input" type="password" placeholder="••••••••" required>
+
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn primary" type="submit">Iniciar sesión</button>
+        <button class="btn link" type="button" onclick="alert('Recuperación (mockup)')">¿Olvidaste tu contraseña?</button>
+      </div>
+
+      <div class="version">Versión 1.0.0 · Mockup</div>
+    </form>
+  </section>
+</body>
+</html>

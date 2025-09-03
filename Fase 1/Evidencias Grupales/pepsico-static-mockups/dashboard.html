@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tablero – MVP PepsiCo</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script defer src="assets/app.js"></script>
+  <style>
+    :root{
+      --red:#DF002C; --blue-dark:#28458E; --blue-mid:#1b3487; --blue-deep:#142a6c;
+      --green:#00984A; --orange:#EB7B30; --muted:#64748b; --line:#e5e7eb;
+    }
+
+    /* HERO azul arriba */
+    .dash-hero{
+      background: linear-gradient(90deg,var(--blue-dark),var(--blue-mid) 55%,var(--blue-deep));
+      color:#fff;
+      padding:14px 18px;
+      border-radius:14px;
+      margin-bottom:18px;
+      box-shadow:0 8px 24px rgba(2,6,23,.10);
+    }
+    .dash-hero h2{ margin:0; font-weight:800; font-size:1.25rem; letter-spacing:.2px; }
+
+    /* KPIs */
+    .kpis-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:14px;
+      margin-bottom:18px;
+    }
+    .kpi-card{
+      border-radius:14px;
+      padding:16px;
+      background:#fff;
+      border:1px solid #eef2f7;
+      box-shadow:0 2px 6px rgba(2,6,23,.06);
+      text-align:center;
+      transition:transform .12s ease, box-shadow .12s ease;
+    }
+    .kpi-card:hover{ transform:translateY(-2px); box-shadow:0 8px 20px rgba(2,6,23,.08); }
+    .kpi-card .label{ font-size:.9rem; color:var(--muted); margin-bottom:6px; }
+    .kpi-card .value{ font-size:1.7rem; font-weight:800; letter-spacing:.3px; }
+    .kpi-card.blue  .value{ color:#1e3a8a; }
+    .kpi-card.green .value{ color:var(--green); }
+    .kpi-card.orange .value{ color:var(--orange); }
+    .kpi-card.gray  .value{ color:#475569; }
+
+    /* Kanban */
+    .kanban-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:14px;
+    }
+    .kanban-grid .col{
+      border-radius:12px;
+      padding:12px;
+      background:#fff;
+      border:1px solid #eef2f7;
+      box-shadow:0 2px 6px rgba(2,6,23,.05);
+    }
+    .kanban-grid .col h4{
+      margin:0 0 10px;
+      font-size:1rem;
+      color:#0f172a;
+      display:flex; align-items:center; gap:8px;
+      position:relative;
+    }
+    .kanban-grid .col h4::after{
+      content:""; display:block; height:1px; flex:1;
+      background:#e8eef7; margin-left:8px;
+    }
+
+    /* chips */
+    .chip{
+      display:inline-block; margin:4px 6px 0 0; padding:6px 10px;
+      border-radius:999px; font-size:.85rem; font-weight:700; color:#fff;
+      box-shadow:0 1px 0 rgba(0,0,0,.05);
+    }
+    .ingreso .chip{ background:var(--green); }
+    .ejec    .chip{ background:var(--blue-dark); }
+    .pausa   .chip{ background:var(--orange); }
+    .cierre  .chip{ background:#64748b; }
+
+    @media (max-width: 640px){
+      .dash-hero{ border-radius:12px; }
+      .kpi-card .value{ font-size:1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <div class="brand"><span class="mark"></span><span class="word">PEPSICO · Taller</span></div>
+      <div class="user">
+        <button class="btn secondary" onclick="go('index.html')">Salir</button>
+      </div>
+    </header>
+    <div class="layout">
+      
+    <aside class="sidebar">
+      <ul class="nav">
+        <li><a href="dashboard.html" class="active">🏠 Tablero</a></li>
+        <li><a href="bitacora.html">🚘 Bitácora portería</a></li>
+        <li><a href="ot.html">🧰 OT & Tareas</a></li>
+        <li><a href="reportes.html">📊 Reportes</a></li>
+        <li><a href="usuarios.html">👥 Usuarios</a></li>
+      </ul>
+    </aside>
+    
+      <main>
+        <section class="section">
+          <!-- Encabezado con estilo hero -->
+          <div class="dash-hero">
+            <h2>📊 Tablero</h2>
+          </div>
+
+          <!-- KPIs -->
+          <div class="kpis-grid">
+            <div class="kpi-card blue">
+              <div class="label">Vehículos ingresados hoy</div>
+              <div class="value">12</div>
+            </div>
+            <div class="kpi-card green">
+              <div class="label">OTs activas</div>
+              <div class="value">8</div>
+            </div>
+            <div class="kpi-card orange">
+              <div class="label">Tareas en pausa</div>
+              <div class="value">3</div>
+            </div>
+            <div class="kpi-card gray">
+              <div class="label">OTs cerradas</div>
+              <div class="value">5</div>
+            </div>
+          </div>
+
+          <!-- Kanban -->
+          <div class="kanban-grid">
+            <div class="col ingreso">
+              <h4>Ingreso</h4>
+              <span class="chip">ABCD12</span>
+              <span class="chip">JKLM34</span>
+            </div>
+            <div class="col ejec">
+              <h4>En ejecución</h4>
+              <span class="chip">MNO789</span>
+              <span class="chip">GHJ456</span>
+            </div>
+            <div class="col pausa">
+              <h4>Pausada</h4>
+              <span class="chip">TUV234</span>
+            </div>
+            <div class="col cierre">
+              <h4>Cerrada</h4>
+              <span class="chip">QRS901</span>
+              <span class="chip">DE3456</span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

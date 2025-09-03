@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Reportes – MVP PepsiCo</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <style>
+    :root{
+      --red:#DF002C; --blue-dark:#28458E; --blue-elec:#0096D6;
+      --orange:#EB7B30; --green:#00984A; --muted:#64748b;
+    }
+    /* Wrapper del módulo de reportes */
+    .reports-hero{
+      border-radius:18px;
+      padding:18px;
+      color:#fff;
+      background:
+        radial-gradient(800px 400px at 10% 10%, rgba(0,150,214,.25), transparent 60%),
+        radial-gradient(600px 300px at 80% 20%, rgba(223,0,44,.22), transparent 55%),
+        linear-gradient(120deg, var(--blue-dark), #1b3487 55%, #142a6c);
+      box-shadow:var(--shadow, 0 8px 24px rgba(2,6,23,.10));
+    }
+    .filters{
+      display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px
+    }
+    .filters .input, .filters select{width:auto}
+    .charts{
+      display:grid;gap:14px;
+      grid-template-columns:1fr; /* móvil */
+    }
+    .chart-card{
+      background:#fff;border-radius:18px;padding:14px;box-shadow:0 8px 24px rgba(2,6,23,.08)
+    }
+    .chart-head{
+      display:flex;justify-content:space-between;align-items:center;margin-bottom:8px
+    }
+    .legend{display:flex;gap:12px;align-items:center;font-size:12px;color:var(--muted)}
+    .legend .dot{width:10px;height:10px;border-radius:50%}
+    .table-wrap{overflow:hidden;border-radius:14px;border:1px solid #e5e7eb}
+    @media (min-width: 1000px){
+      .charts{grid-template-columns:1fr 1fr}  /* desktop: dos columnas */
+    }
+  </style>
+  <script defer src="assets/app.js"></script>
+  <script>
+    function go(href){ window.location.href = href; }
+
+    // --------- Utilidades simples de gráficos (Canvas 2D) ----------
+    function drawAxes(ctx, w, h, padding){
+      ctx.strokeStyle = "#e5e7eb"; ctx.lineWidth = 1;
+      // Ejes
+      ctx.beginPath();
+      ctx.moveTo(padding, h - padding); ctx.lineTo(w - padding, h - padding);
+      ctx.moveTo(padding, h - padding); ctx.lineTo(padding, padding);
+      ctx.stroke();
+    }
+
+    function drawLineChart(canvas, labels, series, colors){
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width, h = canvas.height, padding = 36;
+
+      // Escalas
+      const maxY = Math.max(...series.flat()) * 1.15 || 1;
+      const stepX = (w - padding*2) / (labels.length - 1 || 1);
+      const y = v => h - padding - (v / maxY) * (h - padding*2);
+
+      // Fondo
+      ctx.clearRect(0,0,w,h);
+      drawAxes(ctx, w, h, padding);
+
+      // Líneas guía horizontales
+      ctx.strokeStyle = "#eef2f7"; ctx.lineWidth = 1;
+      ctx.setLineDash([4,4]);
+      for (let i=1;i<=4;i++){
+        const gy = padding + i*(h - padding*2)/5;
+        ctx.beginPath(); ctx.moveTo(padding, gy); ctx.lineTo(w - padding, gy); ctx.stroke();
+      }
+      ctx.setLineDash([]);
+
+      // Series
+      series.forEach((data, si)=>{
+        ctx.strokeStyle = colors[si]; ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        data.forEach((v,i)=>{
+          const px = padding + i*stepX;
+          const py = y(v);
+          if(i===0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        });
+        ctx.stroke();
+
+        // puntos
+        ctx.fillStyle = colors[si];
+        data.forEach((v,i)=>{
+          const px = padding + i*stepX, py = y(v);
+          ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI*2); ctx.fill();
+        });
+      });
+
+      // Labels del eje X
+      ctx.fillStyle = "#94a3b8"; ctx.font = "12px system-ui, sans-serif";
+      labels.forEach((lb,i)=>{
+        const px = padding + i*stepX;
+        ctx.fillText(lb, px-10, h - padding + 18);
+      });
+    }
+
+    function drawBarChart(canvas, labels, data, color){
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width, h = canvas.height, padding = 36;
+
+      const maxY = Math.max(...data) * 1.2 || 1;
+      const chartW = w - padding*2, chartH = h - padding*2;
+      const colW = chartW / data.length;
+      const y = v => h - padding - (v / maxY) * chartH;
+
+      ctx.clearRect(0,0,w,h);
+      drawAxes(ctx, w, h, padding);
+
+      // Barras
+      for(let i=0;i<data.length;i++){
+        const x = padding + i*colW + colW*0.15;
+        const bw = colW*0.7;
+        const by = y(data[i]);
+        ctx.fillStyle = color;
+        ctx.fillRect(x, by, bw, (h - padding) - by);
+      }
+
+      // Labels eje X
+      ctx.fillStyle = "#94a3b8"; ctx.font = "12px system-ui, sans-serif";
+      labels.forEach((lb,i)=>{
+        const x = padding + i*colW + colW/2;
+        ctx.textAlign = "center";
+        ctx.fillText(lb, x, h - padding + 18);
+      });
+    }
+
+    // --------- Datos de ejemplo y render ----------
+    document.addEventListener("DOMContentLoaded", () => {
+      // Datos ejemplo
+      const meses = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep"];
+      const entradas = [12, 9, 15, 11, 18, 14, 17, 19, 16];
+      const salidas  = [10, 8, 12, 9, 16, 12, 14, 18, 15];
+
+      const estados = ["Ingreso","En ej.","Pausa","Cerrada"];
+      const ots     = [8, 14, 3, 11];
+
+      // Ajustar tamaño de canvas para mejor nitidez
+      document.querySelectorAll("canvas[data-hires]").forEach(cv=>{
+        const dpr = window.devicePixelRatio || 1;
+        const w = cv.clientWidth, h = cv.clientHeight;
+        cv.width = Math.floor(w*dpr); cv.height = Math.floor(h*dpr);
+        cv.getContext("2d").scale(dpr,dpr);
+      });
+
+      // Dibujar
+      const c1 = document.getElementById("chartLine");
+      const c2 = document.getElementById("chartBar");
+      drawLineChart(c1, meses, [entradas, salidas], ["#28458E", "#DF002C"]);
+      drawBarChart(c2, estados, ots, "#EB7B30");
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <div class="brand"><span class="mark"></span><span class="word">PEPSICO · Taller</span></div>
+      <div class="user">
+        <button class="btn secondary" onclick="go('index.html')">Salir</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <ul class="nav">
+          <li><a href="dashboard.html">🏠 Tablero</a></li>
+          <li><a href="bitacora.html">🚘 Bitácora portería</a></li>
+          <li><a href="ot.html">🧰 OT & Tareas</a></li>
+          <li><a href="reportes.html" class="active">📊 Reportes</a></li>
+          <li><a href="usuarios.html">👥 Usuarios</a></li>
+        </ul>
+      </aside>
+
+      <main>
+        <!-- Cabecera del módulo con fondo corporativo -->
+        <section class="reports-hero">
+          <h2 style="margin:0;font-weight:800">Reportes</h2>
+          <p style="margin:.25rem 0 0;opacity:.9">Indicadores clave y datos operativos del taller</p>
+
+          <div class="filters">
+            <label>Rango</label>
+            <input type="date" class="input">
+            <input type="date" class="input">
+            <select class="input">
+              <option>Entradas vs Salidas</option>
+              <option>Horas-hombre</option>
+              <option>Duración por etapa</option>
+            </select>
+            <button class="btn secondary">Generar</button>
+            <button class="btn primary">Exportar CSV</button>
+            <button class="btn primary">Exportar PDF</button>
+          </div>
+        </section>
+
+        <div style="height:12px"></div>
+
+        <!-- Gráficos -->
+        <section class="charts">
+          <div class="chart-card">
+            <div class="chart-head">
+              <strong>Entradas vs Salidas (mensual)</strong>
+              <div class="legend">
+                <span class="dot" style="background:#28458E"></span> Entradas
+                <span class="dot" style="background:#DF002C"></span> Salidas
+              </div>
+            </div>
+            <div style="width:100%;height:260px">
+              <canvas id="chartLine" data-hires style="width:100%;height:100%"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-head">
+              <strong>OTs por estado (última semana)</strong>
+              <div class="legend"><span class="dot" style="background:#EB7B30"></span> Cantidad</div>
+            </div>
+            <div style="width:100%;height:260px">
+              <canvas id="chartBar" data-hires style="width:100%;height:100%"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <div style="height:14px"></div>
+
+        <!-- Tabla -->
+        <section class="section">
+          <h3 style="margin:0 0 10px">Detalle diario</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Fecha</th><th>Entradas</th><th>Salidas</th><th>Observación</th></tr></thead>
+              <tbody>
+                <tr><td>2025-09-01</td><td>14</td><td>12</td><td>—</td></tr>
+                <tr><td>2025-09-02</td><td>11</td><td>13</td><td>Mayor cierre</td></tr>
+                <tr><td>2025-09-03</td><td>18</td><td>15</td><td>Demanda alta</td></tr>
+                <tr><td>2025-09-04</td><td>12</td><td>10</td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
